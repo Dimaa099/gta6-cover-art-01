@@ -3,76 +3,103 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Neon Coast Cover Studio — GTA-style cover art maker</title>
+<title>Neon Coast Cover Studio — photo to GTA-style cover art</title>
+<meta name="description" content="Turn your photo and a caption into a multi-panel GTA-style cover and export it as a PNG. Works fully offline — no upload, no account.">
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <header class="topbar">
-  <div class="brand"><span class="brand-mark">NC</span> Neon Coast <em>Cover Studio</em></div>
-  <p class="tagline">Your photo + a caption → poster cover art. Offline, no upload, free.</p>
+  <span class="mark" aria-hidden="true">NC</span>
+  <div class="brand">
+    <h1>Neon Coast <em>Cover Studio</em></h1>
+    <p>Your photo + a caption &rarr; poster cover art. Offline, no upload, free.</p>
+  </div>
 </header>
+
 <main class="app">
-  <section class="controls" aria-label="Cover controls">
-    <h1>Make your cover</h1>
-    <p class="steps">1 · Add photos &nbsp; 2 · Pick a layout &amp; grade &nbsp; 3 · Export a PNG</p>
+  <aside class="controls" aria-label="Cover controls">
+    <h2>Make your cover</h2>
+    <p class="steps">1 &middot; Add photos &nbsp; 2 &middot; Pick a layout &amp; grade &nbsp; 3 &middot; Export a PNG</p>
 
-    <label class="field">Photos (your own files, never uploaded)
-      <input id="photos" type="file" accept="image/*" multiple>
-    </label>
-    <button id="samplesBtn" type="button" class="ghost">Load the 2 sample photos</button>
-
-    <fieldset>
-      <legend>Layout — multi-panel poster</legend>
-      <div id="layouts" class="swatches"></div>
-    </fieldset>
-
-    <fieldset>
-      <legend>Grade — sunset / neon wash</legend>
-      <div id="grades" class="swatches"></div>
-    </fieldset>
-
-    <fieldset>
-      <legend>Post size</legend>
-      <div id="sizes" class="swatches"></div>
-    </fieldset>
-
-    <label class="field">Title
-      <input id="title" type="text" maxlength="24" value="NEON COAST">
-    </label>
-    <label class="field">Subtitle (script lettering)
-      <input id="subtitle" type="text" maxlength="48" value="sunset heist in the city of lights">
-    </label>
-
-    <label class="check"><input id="singlePhoto" type="checkbox"> One photo across every panel</label>
-    <label class="check"><input id="frameToggle" type="checkbox" checked> White poster frame</label>
-    <label class="check"><input id="grainToggle" type="checkbox" checked> Film grain</label>
-    <label class="check"><input id="vignetteToggle" type="checkbox" checked> Vignette</label>
-
-    <fieldset>
-      <legend>Panels — click a panel, drag to crop, scroll to zoom</legend>
-      <p class="panel-current">Selected panel photo: <strong id="panelPhoto">—</strong></p>
-      <label class="field">Zoom
-        <input id="panelZoom" type="range" min="1" max="2.5" step="0.05" value="1">
+    <section class="group">
+      <h3>Photos — your own files, never uploaded</h3>
+      <label class="file-label">Add photos
+        <input id="photoFile" type="file" accept="image/*" multiple>
       </label>
-      <div id="panels" class="panels"></div>
-    </fieldset>
+      <button id="loadSamples" type="button" class="wide">Load the 2 sample photos</button>
+      <p id="photoLine" class="hint">Loading samples…</p>
+      <label>Photos across panels
+        <select id="mode">
+          <option value="mix" selected>Mix — alternate the photos</option>
+          <option value="one0">Photo 1 in every panel</option>
+          <option value="one1">Photo 2 in every panel</option>
+        </select>
+      </label>
+    </section>
 
-    <div class="row">
-      <button id="undo" type="button" class="ghost">↩ Undo</button>
-      <button id="redo" type="button" class="ghost">Redo ↪</button>
-    </div>
-    <button id="exportCurrent" type="button" class="primary">Export PNG — this size</button>
-    <button id="exportAll" type="button" class="primary alt">Export all 3 sizes at once</button>
-    <p id="status" role="status"></p>
-    <p class="fine">All artwork here is original. No game logos, artwork or fonts are used;
-      lettering is Anton &amp; Pacifico under the SIL Open Font License (see app/fonts/).</p>
-  </section>
+    <section class="group">
+      <h3>Layout — multi-panel poster</h3>
+      <div id="layoutBtns" class="chips" role="group" aria-label="Layout"></div>
+    </section>
 
-  <section class="stage" aria-label="Live preview">
-    <canvas id="preview" width="1080" height="608" aria-label="Live cover preview"></canvas>
+    <section class="group">
+      <h3>Grade — sunset / neon wash</h3>
+      <div id="gradeBtns" class="chips" role="group" aria-label="Grade"></div>
+    </section>
+
+    <section class="group">
+      <h3>Post size</h3>
+      <div class="radios">
+        <label><input type="radio" name="size" value="square" checked> Square · 1080 × 1080</label>
+        <label><input type="radio" name="size" value="portrait"> Portrait · 1080 × 1350</label>
+        <label><input type="radio" name="size" value="wide"> Wide · 1920 × 1080</label>
+      </div>
+    </section>
+
+    <section class="group">
+      <h3>Caption</h3>
+      <label>Title (big display lettering)
+        <input id="title" type="text" maxlength="32" value="NEON COAST">
+      </label>
+      <label>Subtitle (script lettering)
+        <input id="subtitle" type="text" maxlength="60" value="sunset heist in the city of lights">
+      </label>
+      <label>Badge
+        <input id="badge" type="text" maxlength="12" value="HEAT">
+      </label>
+      <label>Star meter — <output id="starsVal">5 ★</output>
+        <input id="stars" type="range" min="0" max="5" step="0.5" value="5">
+      </label>
+    </section>
+
+    <section class="group">
+      <h3>Selected panel — <span id="panelLabel">Panel 1 of 9</span></h3>
+      <label>Zoom — <output id="zoomVal">1.00×</output>
+        <input id="zoom" type="range" min="1" max="2.5" step="0.05" value="1">
+      </label>
+      <div class="row">
+        <button id="swapPhoto" type="button">Swap panel photo</button>
+        <button id="resetPans" type="button">Reset crops</button>
+      </div>
+      <p class="hint">Click a panel to select it, drag it to reposition its photo, scroll over the preview to zoom.</p>
+    </section>
+
+    <section class="group">
+      <h3>Export PNG</h3>
+      <button id="exportBtn" type="button" class="wide primary">Export this size as PNG</button>
+      <button id="exportAllBtn" type="button" class="wide">Export all three sizes</button>
+      <p id="status" role="status" class="hint">Starting…</p>
+    </section>
+
+    <p class="fineprint">Made with the vendored Anton &amp; Pacifico fonts (SIL Open Font License 1.1 — see app/fonts/). No Rockstar Games logo, artwork, character or font is used here, and nothing you add ever leaves your device.</p>
+  </aside>
+
+  <section class="stage-wrap" aria-label="Live preview">
+    <canvas id="stage" width="1080" height="1080">The cover preview — your browser needs canvas support to see it.</canvas>
     <p class="hint">Live preview — drag a panel to reposition its photo, scroll to zoom.</p>
   </section>
 </main>
+
 <script type="module" src="./src/main.js"></script>
 </body>
 </html>

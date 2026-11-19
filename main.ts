@@ -1,17 +1,14 @@
-// Neon Coast Cover Studio — a gta6-cover-art-01 entry (Node 22, stdlib only).
-// The app is this directory's app/ folder: plain static files a desktop browser
-// loads offline (app/index.html and its ES modules, Anton + Pacifico vendored
-// under the SIL Open Font License, no network request). The program hands it in:
-// it copies app/ and screenshots/ from beside this file to /output and writes
-// /output/dossier.json, the summary the judge reads, with the vendored make.fun
-// library. Authored for this entry: the cover studio itself (multi-panel
-// layouts, sunset/neon grades, crop + position per panel, three post sizes).
-//
-// Serve it locally with `node serve.ts`, then open http://localhost:8080.
-// Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
+// Neon Coast Cover Studio — entry for gta6-cover-art-01 (Node 22, stdlib only).
+// Copies app/ and screenshots/ from beside this file to /output and writes
+// /output/dossier.json, the summary the judge reads, with the vendored
+// make.fun library. The app itself is plain static files under app/ — an
+// offline multi-panel cover maker (photo + caption -> GTA-style poster PNG)
+// with six layouts, six sunset/neon grades, per-panel crop, and three export
+// sizes. Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for
+// /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { cpSync, existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-app.ts';
@@ -19,17 +16,25 @@ import { buildDossier } from './vendor/makefun-app.ts';
 const here = fileURLToPath(new URL('.', import.meta.url));
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
-// Authored check: the hand-in is refused early (with a clear message) when the
-// cover screenshots are missing, instead of shipping a dossier with no art.
-const shots = existsSync(join(here, 'screenshots')) ? readdirSync(join(here, 'screenshots')).filter((f) => !f.startsWith('.')) : [];
-if (shots.length < 3 || shots.length > 4) {
-  throw new Error(`Neon Coast Cover Studio needs 3 or 4 screenshots, found ${shots.length}`);
-}
-
 mkdirSync(out, { recursive: true });
 cpSync(join(here, 'app'), join(out, 'app'), { recursive: true });
 mkdirSync(join(out, 'screenshots'), { recursive: true });
 if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
+
+// My own gate before the dossier is written: the entry must carry 3 or 4
+// screenshots, each a real JPEG no bigger than the 256 KiB cap, or the
+// submission is refused here instead of wasting the judge's time.
+const shotsDir = join(here, 'screenshots');
+const shots = existsSync(shotsDir)
+  ? readdirSync(shotsDir).filter((f) => /\.(jpe?g|png)$/i.test(f)).sort()
+  : [];
+if (shots.length < 3 || shots.length > 4) {
+  throw new Error(`expected 3 or 4 screenshots in screenshots/, found ${shots.length}`);
+}
+for (const shot of shots) {
+  const bytes = statSync(join(shotsDir, shot)).size;
+  if (bytes > 262144) throw new Error(`screenshot ${shot} is ${bytes} bytes, over the 256 KiB cap`);
+}
 
 // The scorer's own caps (reference/gate.json): only text_max_bytes shapes the bytes; the others refuse an entry the
 // scorer would refuse (more than 4 screenshots or one over 256 KiB; more than 993 files in app/ or 48 MiB of app
