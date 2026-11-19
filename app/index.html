@@ -3,103 +3,95 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Neon Coast Cover Studio — photo to GTA-style cover art</title>
-<meta name="description" content="Turn your photo and a caption into a multi-panel GTA-style cover and export it as a PNG. Works fully offline — no upload, no account.">
-<link rel="stylesheet" href="./style.css">
+<title>Neon Coast Cover Studio — GTA-style cover art maker</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="topbar">
-  <span class="mark" aria-hidden="true">NC</span>
   <div class="brand">
-    <h1>Neon Coast <em>Cover Studio</em></h1>
-    <p>Your photo + a caption &rarr; poster cover art. Offline, no upload, free.</p>
+    <span class="brand-mark">NC</span>
+    <div>
+      <h1>Neon Coast Cover Studio</h1>
+      <p>Turn any photo into GTA-style cover art — offline, no upload, export PNG</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button id="export-btn" type="button" class="export-btn">Export PNG</button>
   </div>
 </header>
 
-<main class="app">
-  <aside class="controls" aria-label="Cover controls">
-    <h2>Make your cover</h2>
-    <p class="steps">1 &middot; Add photos &nbsp; 2 &middot; Pick a layout &amp; grade &nbsp; 3 &middot; Export a PNG</p>
-
-    <section class="group">
-      <h3>Photos — your own files, never uploaded</h3>
-      <label class="file-label">Add photos
-        <input id="photoFile" type="file" accept="image/*" multiple>
-      </label>
-      <button id="loadSamples" type="button" class="wide">Load the 2 sample photos</button>
-      <p id="photoLine" class="hint">Loading samples…</p>
-      <label>Photos across panels
-        <select id="mode">
-          <option value="mix" selected>Mix — alternate the photos</option>
-          <option value="one0">Photo 1 in every panel</option>
-          <option value="one1">Photo 2 in every panel</option>
-        </select>
-      </label>
-    </section>
-
-    <section class="group">
-      <h3>Layout — multi-panel poster</h3>
-      <div id="layoutBtns" class="chips" role="group" aria-label="Layout"></div>
-    </section>
-
-    <section class="group">
-      <h3>Grade — sunset / neon wash</h3>
-      <div id="gradeBtns" class="chips" role="group" aria-label="Grade"></div>
-    </section>
-
-    <section class="group">
-      <h3>Post size</h3>
-      <div class="radios">
-        <label><input type="radio" name="size" value="square" checked> Square · 1080 × 1080</label>
-        <label><input type="radio" name="size" value="portrait"> Portrait · 1080 × 1350</label>
-        <label><input type="radio" name="size" value="wide"> Wide · 1920 × 1080</label>
-      </div>
-    </section>
-
-    <section class="group">
-      <h3>Caption</h3>
-      <label>Title (big display lettering)
-        <input id="title" type="text" maxlength="32" value="NEON COAST">
-      </label>
-      <label>Subtitle (script lettering)
-        <input id="subtitle" type="text" maxlength="60" value="sunset heist in the city of lights">
-      </label>
-      <label>Badge
-        <input id="badge" type="text" maxlength="12" value="HEAT">
-      </label>
-      <label>Star meter — <output id="starsVal">5 ★</output>
-        <input id="stars" type="range" min="0" max="5" step="0.5" value="5">
-      </label>
-    </section>
-
-    <section class="group">
-      <h3>Selected panel — <span id="panelLabel">Panel 1 of 9</span></h3>
-      <label>Zoom — <output id="zoomVal">1.00×</output>
-        <input id="zoom" type="range" min="1" max="2.5" step="0.05" value="1">
-      </label>
-      <div class="row">
-        <button id="swapPhoto" type="button">Swap panel photo</button>
-        <button id="resetPans" type="button">Reset crops</button>
-      </div>
-      <p class="hint">Click a panel to select it, drag it to reposition its photo, scroll over the preview to zoom.</p>
-    </section>
-
-    <section class="group">
-      <h3>Export PNG</h3>
-      <button id="exportBtn" type="button" class="wide primary">Export this size as PNG</button>
-      <button id="exportAllBtn" type="button" class="wide">Export all three sizes</button>
-      <p id="status" role="status" class="hint">Starting…</p>
-    </section>
-
-    <p class="fineprint">Made with the vendored Anton &amp; Pacifico fonts (SIL Open Font License 1.1 — see app/fonts/). No Rockstar Games logo, artwork, character or font is used here, and nothing you add ever leaves your device.</p>
-  </aside>
-
-  <section class="stage-wrap" aria-label="Live preview">
-    <canvas id="stage" width="1080" height="1080">The cover preview — your browser needs canvas support to see it.</canvas>
-    <p class="hint">Live preview — drag a panel to reposition its photo, scroll to zoom.</p>
+<main class="workspace">
+  <section class="preview-pane" aria-label="Cover preview">
+    <canvas id="preview" width="640" height="360"></canvas>
+    <p class="hint">Drag a panel to move its photo · Scroll over a panel to zoom · Click a panel to select it</p>
+    <p id="export-note" class="export-note" role="status"></p>
   </section>
+
+  <aside class="controls" aria-label="Cover controls">
+    <section class="control-group">
+      <h2>1 · Layout</h2>
+      <div id="layout-pick" class="chip-row"></div>
+    </section>
+
+    <section class="control-group">
+      <h2>2 · Colour grade</h2>
+      <div id="grade-pick" class="chip-row"></div>
+    </section>
+
+    <section class="control-group">
+      <h2>3 · Post size</h2>
+      <div id="size-pick" class="chip-row"></div>
+    </section>
+
+    <section class="control-group">
+      <h2>4 · Caption</h2>
+      <label class="field">
+        <span>Title</span>
+        <input id="title-input" type="text" value="NEON COAST" maxlength="24" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>Subtitle (neon script)</span>
+        <input id="subtitle-input" type="text" value="a vice city story" maxlength="48" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>Badge</span>
+        <input id="badge-input" type="text" value="EST. 2026" maxlength="16" autocomplete="off">
+      </label>
+    </section>
+
+    <section class="control-group">
+      <h2>5 · Photos</h2>
+      <div class="fill-row">
+        <button id="fill-boulevard" type="button" class="mini-btn">Fill all · Boulevard</button>
+        <button id="fill-pier" type="button" class="mini-btn">Fill all · Pier</button>
+        <button id="reset-pan" type="button" class="mini-btn">Reset pan / zoom</button>
+      </div>
+      <div id="panel-list" class="panel-list"></div>
+      <p class="hint">Your photos stay on your machine — they are read in the browser and never uploaded.</p>
+    </section>
+
+    <section class="control-group">
+      <h2>6 · Finish</h2>
+      <label class="field inline">
+        <span>Grain</span>
+        <input id="grain-input" type="range" min="0" max="1" step="0.05" value="0.55">
+        <span id="grain-value">55%</span>
+      </label>
+      <label class="check">
+        <input id="vignette-input" type="checkbox" checked>
+        <span>Vignette</span>
+      </label>
+      <label class="check">
+        <input id="frame-input" type="checkbox" checked>
+        <span>Poster frame</span>
+      </label>
+    </section>
+
+    <p class="credit">Original art and lettering. Fonts Anton &amp; Pacifico under the SIL Open Font License — see app/fonts. Not affiliated with Rockstar Games.</p>
+  </aside>
 </main>
 
-<script type="module" src="./src/main.js"></script>
+<script type="module" src="src/main.js"></script>
+<script type="module" src="src/shots.js"></script>
 </body>
 </html>
